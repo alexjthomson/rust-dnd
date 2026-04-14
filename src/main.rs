@@ -2,6 +2,39 @@ use rand::Rng;
 use std::env;
 use thiserror::Error;
 
+fn main() -> Result<(), AppError> {
+    let input = env::args().skip(1).collect::<Vec<_>>().join(" ");
+    if input.trim().is_empty() {
+        return Err(ParseError::MissingInput.into());
+    }
+
+    let expr = parse_dice_expression(&input)?;
+    println!("AST:\n{expr:#?}");
+
+    let mut rng = rand::thread_rng();
+    let result = expr.eval(&mut rng)?;
+
+    println!("Expression: {input}");
+
+    if !result.dice_rolls.is_empty() {
+        println!("Dice rolls:");
+        for roll in &result.dice_rolls {
+            println!("  {}", format_roll_record(roll));
+        }
+    }
+
+    println!("Result: {}", result.value);
+    Ok(())
+}
+
+#[derive(Debug, Error)]
+pub enum AppError {
+    #[error(transparent)]
+    Parse(#[from] ParseError),
+    #[error(transparent)]
+    Eval(#[from] EvalError),
+}
+
 /// A parsed expression node.
 #[derive(Debug, Clone)]
 pub enum Expr {
@@ -718,31 +751,6 @@ fn format_roll_record(record: &DiceRollRecord) -> String {
             record.rolls, record.kept, record.total
         ),
     }
-}
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let input = env::args().skip(1).collect::<Vec<_>>().join(" ");
-    if input.trim().is_empty() {
-        return Err(ParseError::MissingInput.into());
-    }
-
-    let expr = parse_dice_expression(&input)?;
-    println!("AST:\n{expr:#?}");
-
-    let mut rng = rand::thread_rng();
-    let result = expr.eval(&mut rng)?;
-
-    println!("Expression: {input}");
-    println!("Result: {}", result.value);
-
-    if !result.dice_rolls.is_empty() {
-        println!("Dice rolls:");
-        for roll in &result.dice_rolls {
-            println!("  {}", format_roll_record(roll));
-        }
-    }
-
-    Ok(())
 }
 
 #[cfg(test)]
