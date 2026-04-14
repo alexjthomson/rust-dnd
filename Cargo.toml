@@ -1,7 +1,8 @@
 [package]
-name = "dnd"
-version = "0.1.0"
-edition = "2021"
+name = "dice-parser"
+version = "0.1.1"
+edition = "2024"
 
 [dependencies]
 rand = "0.8"
+thiserror = "1"
